@@ -35,6 +35,7 @@ async function generatePosts(news) {
 - 해시태그 없음, 이모지 최대 2개
 - 뉴스 내용을 짧게 소화해서 개인적인 반응/감상을 더할 것
 - 모든 포스팅은 독립적인 하나의 트윗
+- content 안에 URL이나 링크 절대 포함 금지
 
 뉴스 목록:
 ${newsList}
@@ -74,7 +75,16 @@ JSON만 반환하고 다른 텍스트는 절대 포함하지 마세요.`
   // JSON 블록 추출
   const match = raw.match(/\[[\s\S]*\]/)
   if (!match) throw new Error(`JSON 파싱 실패: ${raw.slice(0, 200)}`)
-  return JSON.parse(match[0])
+  const posts = JSON.parse(match[0])
+
+  // content 안의 URL 및 "링크는 ..." 패턴 제거
+  return posts.map(p => ({
+    ...p,
+    content: (typeof p === 'string' ? p : p.content)
+      .replace(/링크는?\s*https?:\/\/\S+/g, '')
+      .replace(/https?:\/\/\S+/g, '')
+      .trim()
+  }))
 }
 
 async function main() {
