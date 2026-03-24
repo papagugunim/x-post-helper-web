@@ -11,10 +11,10 @@ async function fetchRecentNews() {
   const data = await res.json()
   const items = data.items || []
 
-  // 최근 4시간 내 뉴스 우선, 없으면 최신 8개
-  const cutoff = new Date(Date.now() - 4 * 60 * 60 * 1000)
+  // 최근 6시간 내 뉴스 우선, 없으면 최신 20개
+  const cutoff = new Date(Date.now() - 6 * 60 * 60 * 1000)
   const recent = items.filter(item => new Date(item.published_at) >= cutoff)
-  return recent.length >= 3 ? recent.slice(0, 12) : items.slice(0, 8)
+  return recent.length >= 5 ? recent.slice(0, 20) : items.slice(0, 20)
 }
 
 async function generatePosts(news) {
