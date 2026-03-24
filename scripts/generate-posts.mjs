@@ -18,8 +18,8 @@ async function fetchRecentNews() {
 }
 
 async function generatePosts(news) {
-  const apiKey = process.env.GEMINI_API_KEY
-  if (!apiKey) throw new Error('GEMINI_API_KEY가 설정되지 않았습니다')
+  const apiKey = process.env.GROQ_API_KEY
+  if (!apiKey) throw new Error('GROQ_API_KEY가 설정되지 않았습니다')
 
   const newsList = news.map((item, i) =>
     `${i + 1}. [${item.topic}] ${item.title}\n   링크: ${item.link}`
@@ -48,24 +48,28 @@ ${newsList}
 JSON만 반환하고 다른 텍스트는 절대 포함하지 마세요.`
 
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    'https://api.groq.com/openai/v1/chat/completions',
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.9 }
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.9
       })
     }
   )
 
   if (!res.ok) {
     const err = await res.text()
-    throw new Error(`Gemini API error: ${res.status} - ${err}`)
+    throw new Error(`Groq API error: ${res.status} - ${err}`)
   }
 
   const data = await res.json()
-  const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+  const raw = data.choices?.[0]?.message?.content || ''
 
   // JSON 블록 추출
   const match = raw.match(/\[[\s\S]*\]/)
