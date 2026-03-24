@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface Post {
   content: string
@@ -42,9 +42,9 @@ function PostCard({ index, post }: { index: number; post: Post | string }) {
             href={link}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[11px] text-[#aaa] hover:text-[#555] transition-colors underline underline-offset-2 truncate max-w-[200px]"
+            className="text-[11px] text-[#aaa] hover:text-[#555] transition-colors underline underline-offset-2"
           >
-            기사 링크
+            바로 가기
           </a>
         )}
       </div>
@@ -60,7 +60,7 @@ function PostCard({ index, post }: { index: number; post: Post | string }) {
 
 export default function Home() {
   const [data, setData] = useState<PostsData | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   const load = async () => {
     setLoading(true)
@@ -70,21 +70,12 @@ export default function Home() {
     setLoading(false)
   }
 
-  if (!data) {
+  useEffect(() => { load() }, [])
+
+  if (loading || !data) {
     return (
       <main className="min-h-screen bg-[#f5f5f0] flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-3xl mb-4">🐦</p>
-          <h1 className="text-base font-semibold text-[#1a1a1a] mb-1">X 포스팅 예시</h1>
-          <p className="text-xs text-[#999] mb-6">@hellogugunim</p>
-          <button
-            onClick={load}
-            disabled={loading}
-            className="bg-[#1a1a1a] text-white text-sm px-5 py-2.5 rounded-full hover:bg-[#333] transition-colors disabled:opacity-50"
-          >
-            {loading ? '불러오는 중...' : '포스팅 예시 보기'}
-          </button>
-        </div>
+        <p className="text-sm text-[#999]">불러오는 중...</p>
       </main>
     )
   }
