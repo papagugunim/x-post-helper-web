@@ -2,9 +2,14 @@
 
 import { useState } from 'react'
 
+interface Post {
+  content: string
+  link?: string
+}
+
 interface PostsData {
   generated_at: string | null
-  posts: string[]
+  posts: Array<Post | string>
 }
 
 function formatMSK(iso: string | null) {
@@ -16,8 +21,10 @@ function formatMSK(iso: string | null) {
   }) + ' MSK'
 }
 
-function PostCard({ index, content }: { index: number; content: string }) {
+function PostCard({ index, post }: { index: number; post: Post | string }) {
   const [copied, setCopied] = useState(false)
+  const content = typeof post === 'string' ? post : post.content
+  const link = typeof post === 'string' ? undefined : post.link
 
   const copy = async () => {
     await navigator.clipboard.writeText(content)
@@ -29,6 +36,18 @@ function PostCard({ index, content }: { index: number; content: string }) {
     <div className="group relative bg-white border border-[#e8e8e0] rounded-xl p-4 hover:border-[#c8c8c0] transition-colors">
       <span className="absolute top-3 left-3 text-[10px] text-[#ccc] font-mono">{index}</span>
       <p className="text-sm leading-relaxed text-[#1a1a1a] whitespace-pre-wrap pl-5 pr-8">{content}</p>
+      <div className="flex items-center gap-2 mt-2 pl-5">
+        {link && (
+          <a
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] text-[#aaa] hover:text-[#555] transition-colors underline underline-offset-2 truncate max-w-[200px]"
+          >
+            기사 링크
+          </a>
+        )}
+      </div>
       <button
         onClick={copy}
         className="absolute top-2.5 right-2.5 text-[11px] text-[#aaa] hover:text-[#555] transition-colors px-2 py-0.5 rounded"
@@ -107,7 +126,7 @@ export default function Home() {
             <p className="text-[11px] text-[#bbb] mb-3">{data.posts.length}개</p>
             <div className="space-y-2">
               {data.posts.map((post, i) => (
-                <PostCard key={i} index={i + 1} content={post} />
+                <PostCard key={i} index={i + 1} post={post} />
               ))}
             </div>
           </>
