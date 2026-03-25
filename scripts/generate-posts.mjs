@@ -40,13 +40,13 @@ async function generatePosts(news) {
 뉴스 목록:
 ${newsList}
 
-각 뉴스마다 포스팅 하나씩 작성해주세요. 아래 JSON 형식으로만 응답하세요:
-[
-  {"content": "포스팅 내용...", "link": "뉴스URL"},
-  ...
-]
+각 뉴스마다 포스팅 하나씩 작성해주세요. 반드시 아래 JSON 형식으로만 응답하세요:
+{"posts": [{"content": "포스팅 내용", "link": "뉴스URL"}, ...]}
 
-JSON만 반환하고 다른 텍스트는 절대 포함하지 마세요.`
+규칙:
+- content 안에 큰따옴표(") 사용 금지, 작은따옴표 사용
+- content 안에 줄바꿈 금지, 문장은 공백으로 이어쓸 것
+- JSON 외 다른 텍스트 절대 포함 금지`
 
   const res = await fetch(
     'https://api.groq.com/openai/v1/chat/completions',
@@ -59,7 +59,8 @@ JSON만 반환하고 다른 텍스트는 절대 포함하지 마세요.`
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
         messages: [{ role: 'user', content: prompt }],
-        temperature: 0.9
+        temperature: 0.9,
+        response_format: { type: 'json_object' }
       })
     }
   )
@@ -72,10 +73,17 @@ JSON만 반환하고 다른 텍스트는 절대 포함하지 마세요.`
   const data = await res.json()
   const raw = data.choices?.[0]?.message?.content || ''
 
-  // JSON 블록 추출
-  const match = raw.match(/\[[\s\S]*\]/)
-  if (!match) throw new Error(`JSON 파싱 실패: ${raw.slice(0, 200)}`)
-  const posts = JSON.parse(match[0])
+  // JSON 파싱 (json_object 모드이므로 항상 유효한 JSON)
+  let parsed
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    // 혹시라도 파싱 실패 시 배열/객체 추출 시도
+    const match = raw.match(/\{[\s\S]*\}|\[[\s\S]*\]/)
+    if (!match) throw new Error(`JSON 파싱 실패: ${raw.slice(0, 200)}`)
+    parsed = JSON.parse(match[0])
+  }
+  const posts = Array.isArray(parsed) ? parsed : (parsed.posts || [])
 
   // content 안의 URL 및 "링크는 ..." 패턴 제거
   return posts.map(p => ({
