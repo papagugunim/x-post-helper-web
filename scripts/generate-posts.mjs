@@ -1,4 +1,4 @@
-import { writeFileSync, mkdirSync } from 'fs'
+import { writeFileSync, readFileSync, mkdirSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -30,7 +30,8 @@ async function generatePosts(news) {
 
 포스팅 스타일 규칙:
 - 반드시 4문장 이상 10문장 이하로 작성 (짧으면 안 됨)
-- 자연스러운 구어체
+- 오직 한국어만 사용 (영어, 러시아어, 한자, 외국어 절대 사용 금지)
+- 자연스러운 한국어 구어체
 - 러시아 생활 한국인 시점으로 작성
 - "에라이", "간지다", "실화냐", "ㄷㄷ", "아이고" 중 하나를 자연스럽게 활용
 - 해시태그 없음, 이모지 최대 2개
@@ -102,15 +103,26 @@ async function main() {
   console.log(`뉴스 ${news.length}개 로드됨`)
 
   console.log('포스팅 생성 중...')
-  const posts = await generatePosts(news)
-  console.log(`포스팅 ${posts.length}개 생성됨`)
+  const newPosts = await generatePosts(news)
+  const now = new Date().toISOString()
+  const stamped = newPosts.map(p => ({ ...p, created_at: now }))
+  console.log(`포스팅 ${stamped.length}개 생성됨`)
+
+  // 기존 포스팅 불러오기
+  const postsPath = join(ROOT, 'data', 'posts.json')
+  let existing = []
+  try {
+    const raw = readFileSync(postsPath, 'utf-8')
+    const parsed = JSON.parse(raw)
+    existing = parsed.posts || []
+  } catch { /* 파일 없으면 빈 배열 */ }
+
+  // 새 포스팅을 앞에 추가, 최대 500개 유지
+  const all = [...stamped, ...existing].slice(0, 500)
 
   mkdirSync(join(ROOT, 'data'), { recursive: true })
-  writeFileSync(
-    join(ROOT, 'data', 'posts.json'),
-    JSON.stringify({ generated_at: new Date().toISOString(), posts }, null, 2)
-  )
-  console.log('data/posts.json 저장 완료')
+  writeFileSync(postsPath, JSON.stringify({ generated_at: now, posts: all }, null, 2))
+  console.log(`data/posts.json 저장 완료 (총 ${all.length}개)`)
 }
 
 main().catch(err => {
