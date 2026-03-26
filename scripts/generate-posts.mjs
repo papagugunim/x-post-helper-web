@@ -60,7 +60,13 @@ ${newsList}
       },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
-        messages: [{ role: 'user', content: prompt }],
+        messages: [
+          {
+            role: 'system',
+            content: '당신은 한국어만 사용하는 어시스턴트입니다. 영어, 러시아어, 한자, 기타 외국어는 절대 사용하지 마세요. 모든 응답은 순수한 한국어로만 작성하세요.'
+          },
+          { role: 'user', content: prompt }
+        ],
         temperature: 0.9,
         response_format: { type: 'json_object' }
       })
@@ -87,14 +93,25 @@ ${newsList}
   }
   const posts = Array.isArray(parsed) ? parsed : (parsed.posts || [])
 
-  // content 안의 URL 및 "링크는 ..." 패턴 제거
-  return posts.map(p => ({
-    ...p,
-    content: (typeof p === 'string' ? p : p.content)
-      .replace(/링크는?\s*https?:\/\/\S+/g, '')
-      .replace(/https?:\/\/\S+/g, '')
-      .trim()
-  }))
+  // content 정제 및 외국어 포함 포스팅 필터링
+  const cyrillic = /[а-яёА-ЯЁ]/
+  const foreignWord = /\b[a-zA-Z]{4,}\b/g
+
+  return posts
+    .map(p => ({
+      ...p,
+      content: (typeof p === 'string' ? p : p.content)
+        .replace(/링크는?\s*https?:\/\/\S+/g, '')
+        .replace(/https?:\/\/\S+/g, '')
+        .trim()
+    }))
+    .filter(p => {
+      const content = p.content || ''
+      if (cyrillic.test(content)) return false  // 러시아어 포함 제거
+      const foreignMatches = content.match(foreignWord) || []
+      if (foreignMatches.length >= 2) return false  // 영어 단어 2개 이상 제거
+      return true
+    })
 }
 
 async function main() {
