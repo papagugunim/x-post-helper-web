@@ -101,7 +101,8 @@ ${newsList}
 
   // content 정제 및 외국어 포함 포스팅 필터링
   const cyrillic = /[а-яёА-ЯЁ]/
-  const foreignWord = /\b[a-zA-Z]{4,}\b/g
+  const foreignWord = /\b[a-zA-Z]{3,}\b/  // 3글자 이상 영어 단어 1개라도
+  const chineseChar = /[\u4e00-\u9fff]/    // 한자
 
   return posts
     .map(p => ({
@@ -113,9 +114,9 @@ ${newsList}
     }))
     .filter(p => {
       const content = p.content || ''
-      if (cyrillic.test(content)) return false  // 러시아어 포함 제거
-      const foreignMatches = content.match(foreignWord) || []
-      if (foreignMatches.length >= 2) return false  // 영어 단어 2개 이상 제거
+      if (cyrillic.test(content)) return false    // 러시아어 제거
+      if (foreignWord.test(content)) return false // 영어 단어 제거
+      if (chineseChar.test(content)) return false // 한자 제거
       return true
     })
 }
