@@ -138,6 +138,7 @@ ${newsList}
   const cyrillic = /[а-яёА-ЯЁ]/
   const foreignWord = /\b[a-zA-Z]{3,}\b/  // 3글자 이상 영어 단어 1개라도
   const chineseChar = /[\u4e00-\u9fff]/    // 한자
+  const vietnamese = /[àáâãèéêìíòóôõùúýăđơưạặầẩảẫậắẳẵẻẽẹếềệỉịọốồổỗộớờởỡợụủứừựỳỵỷỹÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚÝĂĐƠƯ]/  // 베트남어 특수 문자
 
   return posts
     .map(p => ({
@@ -152,6 +153,7 @@ ${newsList}
       if (cyrillic.test(content)) return false    // 러시아어 제거
       if (foreignWord.test(content)) return false // 영어 단어 제거
       if (chineseChar.test(content)) return false // 한자 제거
+      if (vietnamese.test(content)) return false  // 베트남어 제거
       return true
     })
 }
