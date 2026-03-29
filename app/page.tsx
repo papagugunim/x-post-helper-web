@@ -101,11 +101,11 @@ export default function Home() {
     const apply = (dark: boolean) => {
       root.classList.toggle('dark', dark)
       if (dark) {
-        root.style.setProperty('--bg', '#111111')
-        root.style.setProperty('--bg-header', 'rgba(17,17,17,0.92)')
-        root.style.setProperty('--border', '#2a2a2a')
-        root.style.setProperty('--card-bg', '#1a1a1a')
-        root.style.setProperty('--card-hover', '#1f1f1f')
+        root.style.setProperty('--bg', '#000000')
+        root.style.setProperty('--bg-header', 'rgba(0,0,0,0.92)')
+        root.style.setProperty('--border', '#222222')
+        root.style.setProperty('--card-bg', '#0d0d0d')
+        root.style.setProperty('--card-hover', '#141414')
         root.style.setProperty('--text-main', '#e8e8e8')
         root.style.setProperty('--text-sub', '#aaaaaa')
         root.style.setProperty('--text-muted', '#555555')
