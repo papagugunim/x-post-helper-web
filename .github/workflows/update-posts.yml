@@ -8,6 +8,7 @@ on:
     - cron: '30 13 * * *'  # 16:30 MSK
     - cron: '0 16 * * *'   # 19:00 MSK
     - cron: '0 19 * * *'   # 22:00 MSK
+    - cron: '0 21 * * *'   # 24:00 MSK
   workflow_dispatch:
 
 jobs:

@@ -6,15 +6,15 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
 
 async function fetchRecentNews() {
-  const res = await fetch('https://rnews-archive.vercel.app/api/reports')
+  const res = await fetch('https://rnews-archive.vercel.app/api/reports?limit=50')
   if (!res.ok) throw new Error(`News API error: ${res.status}`)
   const data = await res.json()
   const items = data.items || []
 
-  // 최근 6시간 내 뉴스 우선, 없으면 최신 20개
+  // 최근 6시간 내 뉴스 우선, 없으면 최신 50개
   const cutoff = new Date(Date.now() - 6 * 60 * 60 * 1000)
   const recent = items.filter(item => new Date(item.published_at) >= cutoff)
-  return recent.length >= 5 ? recent.slice(0, 20) : items.slice(0, 20)
+  return recent.length >= 5 ? recent.slice(0, 50) : items.slice(0, 50)
 }
 
 async function generatePosts(news) {
@@ -158,8 +158,16 @@ async function main() {
   const news = await fetchRecentNews()
   console.log(`뉴스 ${news.length}개 로드됨`)
 
-  console.log('포스팅 생성 중...')
-  const newPosts = await generatePosts(news)
+  // 25개씩 배치 처리 (토큰 초과 방지)
+  console.log('포스팅 생성 중... (배치 1/2)')
+  const batch1 = await generatePosts(news.slice(0, 25))
+  console.log(`배치1: ${batch1.length}개 생성됨`)
+
+  console.log('포스팅 생성 중... (배치 2/2)')
+  const batch2 = await generatePosts(news.slice(25))
+  console.log(`배치2: ${batch2.length}개 생성됨`)
+
+  const newPosts = [...batch1, ...batch2]
   const now = new Date().toISOString()
   const stamped = newPosts.map(p => ({ ...p, created_at: now }))
   console.log(`포스팅 ${stamped.length}개 생성됨`)

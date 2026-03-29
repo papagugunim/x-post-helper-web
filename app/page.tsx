@@ -80,6 +80,8 @@ const PAGE_SIZE = 20
 export default function Home() {
   const [data, setData] = useState<PostsData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [generating, setGenerating] = useState(false)
+  const [generateMsg, setGenerateMsg] = useState('')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const sentinelRef = useRef<HTMLDivElement>(null)
 
@@ -124,6 +126,24 @@ export default function Home() {
     mq.addEventListener('change', handler)
     return () => mq.removeEventListener('change', handler)
   }, [])
+
+  const generate = async () => {
+    setGenerating(true)
+    setGenerateMsg('')
+    try {
+      const res = await fetch('/api/generate', { method: 'POST' })
+      if (res.ok) {
+        setGenerateMsg('생성 요청 완료! 약 1~2분 후 새로고침하세요.')
+      } else {
+        const err = await res.json()
+        setGenerateMsg(`오류: ${err.error}`)
+      }
+    } catch {
+      setGenerateMsg('요청 실패')
+    }
+    setGenerating(false)
+    setTimeout(() => setGenerateMsg(''), 5000)
+  }
 
   const load = async () => {
     setLoading(true)
@@ -175,14 +195,27 @@ export default function Home() {
             <span className="text-[14px] font-bold" style={{ color: 'var(--text-main)' }}>@hellogugunim</span>
             <span className="text-[12px] ml-2" style={{ color: 'var(--text-muted)' }}>{data.posts.length}개</span>
           </div>
-          <button
-            onClick={load}
-            disabled={loading}
-            className="text-[12px] px-3 py-1 rounded-lg font-medium transition-colors disabled:opacity-40"
-            style={{ background: 'var(--copy-bg)', color: 'var(--copy-text)', border: '1px solid var(--border)' }}
-          >
-            새로고침
-          </button>
+          <div className="flex items-center gap-2">
+            {generateMsg && (
+              <span className="text-[11px]" style={{ color: 'var(--text-sub)' }}>{generateMsg}</span>
+            )}
+            <button
+              onClick={generate}
+              disabled={generating}
+              className="text-[12px] px-3 py-1 rounded-lg font-medium transition-colors disabled:opacity-40"
+              style={{ background: 'var(--copy-done-bg)', color: 'var(--copy-done-text)', border: '1px solid var(--border)' }}
+            >
+              {generating ? '요청 중...' : '지금 생성'}
+            </button>
+            <button
+              onClick={load}
+              disabled={loading}
+              className="text-[12px] px-3 py-1 rounded-lg font-medium transition-colors disabled:opacity-40"
+              style={{ background: 'var(--copy-bg)', color: 'var(--copy-text)', border: '1px solid var(--border)' }}
+            >
+              새로고침
+            </button>
+          </div>
         </div>
       </header>
 
