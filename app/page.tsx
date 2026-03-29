@@ -83,6 +83,7 @@ export default function Home() {
   const [generating, setGenerating] = useState(false)
   const [generateMsg, setGenerateMsg] = useState('')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const [showTop, setShowTop] = useState(false)
   const sentinelRef = useRef<HTMLDivElement>(null)
 
   // 시스템 다크모드 자동 감지 + CSS 변수 주입
@@ -144,6 +145,12 @@ export default function Home() {
     setGenerating(false)
     setTimeout(() => setGenerateMsg(''), 5000)
   }
+
+  useEffect(() => {
+    const onScroll = () => setShowTop(window.scrollY > 400)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   const load = async () => {
     setLoading(true)
@@ -232,6 +239,20 @@ export default function Home() {
           </>
         )}
       </div>
+
+      {/* 맨 위로 버튼 */}
+      {showTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full flex items-center justify-center shadow-md transition-all"
+          style={{ background: 'var(--copy-bg)', border: '1px solid var(--border)', color: 'var(--text-sub)' }}
+          aria-label="맨 위로"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 12V4M4 8l4-4 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+      )}
     </main>
   )
 }
