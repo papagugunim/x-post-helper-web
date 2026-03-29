@@ -207,14 +207,6 @@ export default function Home() {
             >
               {generating ? '요청 중...' : '지금 생성'}
             </button>
-            <button
-              onClick={load}
-              disabled={loading}
-              className="text-[12px] px-3 py-1 rounded-lg font-medium transition-colors disabled:opacity-40"
-              style={{ background: 'var(--copy-bg)', color: 'var(--copy-text)', border: '1px solid var(--border)' }}
-            >
-              새로고침
-            </button>
           </div>
         </div>
       </header>
