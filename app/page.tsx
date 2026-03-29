@@ -24,6 +24,8 @@ function formatMSK(iso: string | null | undefined) {
 
 function PostItem({ index, post }: { index: number; post: Post | string }) {
   const [copied, setCopied] = useState(false)
+  const [vote, setVote] = useState<'like' | 'dislike' | null>(null)
+  const [voting, setVoting] = useState(false)
   const content = typeof post === 'string' ? post : post.content
   const createdAt = typeof post === 'string' ? undefined : post.created_at
   const link = typeof post === 'string' ? undefined : (post as Post).link
@@ -32,6 +34,23 @@ function PostItem({ index, post }: { index: number; post: Post | string }) {
     await navigator.clipboard.writeText(content)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const sendVote = async (v: 'like' | 'dislike') => {
+    if (voting || vote === v) return
+    const prev = vote
+    setVote(v)
+    setVoting(true)
+    try {
+      await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, vote: v, created_at: createdAt }),
+      })
+    } catch {
+      setVote(prev)
+    }
+    setVoting(false)
   }
 
   return (
@@ -77,9 +96,43 @@ function PostItem({ index, post }: { index: number; post: Post | string }) {
       </div>
 
       {/* 본문 */}
-      <p className="text-[15px] leading-[1.75] text-[var(--text-main)] break-keep whitespace-pre-line">
+      <p className="text-[15px] leading-[1.75] text-[var(--text-main)] break-keep whitespace-pre-line mb-3">
         {content}
       </p>
+
+      {/* 좋아요 / 싫어요 */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => sendVote('like')}
+          disabled={voting}
+          className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[12px] transition-all duration-150 disabled:opacity-50"
+          style={{
+            background: vote === 'like' ? '#1a2e1a' : 'transparent',
+            color: vote === 'like' ? '#6bcf6b' : 'var(--text-muted)',
+            border: `1px solid ${vote === 'like' ? '#2d5a2d' : 'var(--border)'}`,
+          }}
+        >
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M1 6.5L4 2l1.5 2.5h2L9 1l1 .5v4.5h1.5l.5.5-3 5H4L1 7.5V6.5z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
+          </svg>
+          좋아
+        </button>
+        <button
+          onClick={() => sendVote('dislike')}
+          disabled={voting}
+          className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[12px] transition-all duration-150 disabled:opacity-50"
+          style={{
+            background: vote === 'dislike' ? '#2e1a1a' : 'transparent',
+            color: vote === 'dislike' ? '#cf6b6b' : 'var(--text-muted)',
+            border: `1px solid ${vote === 'dislike' ? '#5a2d2d' : 'var(--border)'}`,
+          }}
+        >
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M1 6.5L4 11l1.5-2.5h2L9 12l1-.5V7h1.5l.5-.5-3-5H4L1 5.5V6.5z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
+          </svg>
+          별로
+        </button>
+      </div>
     </div>
   )
 }
