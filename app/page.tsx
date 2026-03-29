@@ -35,61 +35,43 @@ function PostItem({ index, post }: { index: number; post: Post | string }) {
   }
 
   return (
-    <article
-      className="group relative px-3 py-4 -mx-3 rounded-md transition-colors duration-100"
-      style={{ '--hover-bg': 'var(--item-hover)' } as React.CSSProperties}
-    >
-      <style>{`article.group:hover { background: var(--item-hover); }`}</style>
-
-      <div className="flex gap-3 items-start">
-        {/* 번호 */}
-        <span
-          className="flex-shrink-0 mt-[3px] text-[11px] tabular-nums w-7 text-right"
-          style={{ color: 'var(--text-tertiary)' }}
-        >
-          {index}
-        </span>
-
-        {/* 콘텐츠 */}
-        <div className="flex-1 min-w-0">
-          <p
-            className="text-[15px] leading-[1.75] tracking-[-0.01em] break-keep"
-            style={{ color: 'var(--text-primary)' }}
+    <div className="border border-[var(--border)] rounded-xl p-4 bg-[var(--card-bg)] hover:bg-[var(--card-hover)] transition-colors">
+      {/* 상단: 번호 + 날짜 + 출처 */}
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-[11px] font-bold text-[var(--text-muted)] tabular-nums">#{index}</span>
+        {createdAt && (
+          <span className="text-[11px] text-[var(--text-muted)]">{formatMSK(createdAt)} MSK</span>
+        )}
+        {link && (
+          <a
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] text-[var(--text-muted)] underline underline-offset-2 hover:text-[var(--text-sub)] transition-colors ml-auto"
           >
-            {content}
-          </p>
-
-          <div className="mt-2 flex items-center gap-3 flex-wrap">
-            {createdAt && (
-              <span className="text-[12px]" style={{ color: 'var(--text-secondary)' }}>
-                {formatMSK(createdAt)} MSK
-              </span>
-            )}
-            {link && (
-              <a
-                href={link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[12px] underline underline-offset-2 transition-opacity hover:opacity-70"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                출처 보기
-              </a>
-            )}
-            <button
-              onClick={copy}
-              className="ml-auto text-[12px] transition-all duration-150 opacity-0 group-hover:opacity-100 focus:opacity-100 rounded px-2 py-0.5"
-              style={{
-                color: copied ? 'var(--text-primary)' : 'var(--text-secondary)',
-                background: copied ? 'var(--item-hover)' : 'transparent',
-              }}
-            >
-              {copied ? '복사됨 ✓' : '복사'}
-            </button>
-          </div>
-        </div>
+            출처
+          </a>
+        )}
       </div>
-    </article>
+
+      {/* 본문 */}
+      <p className="text-[15px] leading-[1.75] text-[var(--text-main)] break-keep mb-4">
+        {content}
+      </p>
+
+      {/* 복사 버튼 */}
+      <button
+        onClick={copy}
+        className="w-full py-2 rounded-lg text-[13px] font-semibold transition-all duration-150"
+        style={{
+          background: copied ? 'var(--copy-done-bg)' : 'var(--copy-bg)',
+          color: copied ? 'var(--copy-done-text)' : 'var(--copy-text)',
+          border: '1px solid var(--copy-border)',
+        }}
+      >
+        {copied ? '✓ 복사됨' : '복사하기'}
+      </button>
+    </div>
   )
 }
 
@@ -101,32 +83,44 @@ export default function Home() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const sentinelRef = useRef<HTMLDivElement>(null)
 
-  // 시스템 다크모드 자동 감지 + CSS 변수 적용
+  // 시스템 다크모드 자동 감지 + CSS 변수 주입
   useEffect(() => {
     const root = document.documentElement
-    const applyTheme = (dark: boolean) => {
+    const apply = (dark: boolean) => {
       root.classList.toggle('dark', dark)
       if (dark) {
-        root.style.setProperty('--bg-page', '#191919')
-        root.style.setProperty('--bg-header', 'rgba(25,25,25,0.92)')
-        root.style.setProperty('--border', '#2F2F2F')
-        root.style.setProperty('--text-primary', '#E3E2DF')
-        root.style.setProperty('--text-secondary', '#787774')
-        root.style.setProperty('--text-tertiary', '#4A4A47')
-        root.style.setProperty('--item-hover', '#252525')
+        root.style.setProperty('--bg', '#111111')
+        root.style.setProperty('--bg-header', 'rgba(17,17,17,0.92)')
+        root.style.setProperty('--border', '#2a2a2a')
+        root.style.setProperty('--card-bg', '#1a1a1a')
+        root.style.setProperty('--card-hover', '#1f1f1f')
+        root.style.setProperty('--text-main', '#e8e8e8')
+        root.style.setProperty('--text-sub', '#aaaaaa')
+        root.style.setProperty('--text-muted', '#555555')
+        root.style.setProperty('--copy-bg', '#222222')
+        root.style.setProperty('--copy-border', '#333333')
+        root.style.setProperty('--copy-text', '#cccccc')
+        root.style.setProperty('--copy-done-bg', '#1a2e1a')
+        root.style.setProperty('--copy-done-text', '#6bcf6b')
       } else {
-        root.style.setProperty('--bg-page', '#F7F6F3')
-        root.style.setProperty('--bg-header', 'rgba(247,246,243,0.92)')
-        root.style.setProperty('--border', '#E9E9E7')
-        root.style.setProperty('--text-primary', '#37352F')
-        root.style.setProperty('--text-secondary', '#9B9A97')
-        root.style.setProperty('--text-tertiary', '#C4C3C0')
-        root.style.setProperty('--item-hover', '#EFEEEB')
+        root.style.setProperty('--bg', '#f9f9f9')
+        root.style.setProperty('--bg-header', 'rgba(249,249,249,0.92)')
+        root.style.setProperty('--border', '#e5e5e5')
+        root.style.setProperty('--card-bg', '#ffffff')
+        root.style.setProperty('--card-hover', '#fafafa')
+        root.style.setProperty('--text-main', '#1a1a1a')
+        root.style.setProperty('--text-sub', '#555555')
+        root.style.setProperty('--text-muted', '#aaaaaa')
+        root.style.setProperty('--copy-bg', '#f4f4f4')
+        root.style.setProperty('--copy-border', '#e5e5e5')
+        root.style.setProperty('--copy-text', '#444444')
+        root.style.setProperty('--copy-done-bg', '#f0faf0')
+        root.style.setProperty('--copy-done-text', '#2d862d')
       }
     }
     const mq = window.matchMedia('(prefers-color-scheme: dark)')
-    applyTheme(mq.matches)
-    const handler = (e: MediaQueryListEvent) => applyTheme(e.matches)
+    apply(mq.matches)
+    const handler = (e: MediaQueryListEvent) => apply(e.matches)
     mq.addEventListener('change', handler)
     return () => mq.removeEventListener('change', handler)
   }, [])
@@ -160,16 +154,8 @@ export default function Home() {
 
   if (loading || !data) {
     return (
-      <main
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: 'var(--bg-page, #F7F6F3)' }}
-      >
-        <div
-          className="text-[13px]"
-          style={{ color: 'var(--text-secondary, #9B9A97)' }}
-        >
-          불러오는 중...
-        </div>
+      <main className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg, #f9f9f9)' }}>
+        <p className="text-[13px]" style={{ color: 'var(--text-muted, #aaaaaa)' }}>불러오는 중...</p>
       </main>
     )
   }
@@ -178,51 +164,22 @@ export default function Home() {
   const hasMore = visibleCount < data.posts.length
 
   return (
-    <main
-      className="min-h-screen"
-      style={{ background: 'var(--bg-page, #F7F6F3)' }}
-    >
+    <main className="min-h-screen" style={{ background: 'var(--bg, #f9f9f9)' }}>
       {/* 헤더 */}
       <header
         className="sticky top-0 z-10 backdrop-blur-sm"
-        style={{
-          background: 'var(--bg-header, rgba(247,246,243,0.92))',
-          borderBottom: '1px solid var(--border, #E9E9E7)',
-        }}
+        style={{ background: 'var(--bg-header)', borderBottom: '1px solid var(--border)' }}
       >
-        <div className="max-w-2xl mx-auto px-6 h-12 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {/* 심플 아이콘 */}
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style={{ color: 'var(--text-tertiary)' }}>
-              <rect x="2" y="2" width="6" height="6" rx="1" fill="currentColor" opacity="0.5"/>
-              <rect x="10" y="2" width="6" height="6" rx="1" fill="currentColor" opacity="0.3"/>
-              <rect x="2" y="10" width="6" height="6" rx="1" fill="currentColor" opacity="0.3"/>
-              <rect x="10" y="10" width="6" height="6" rx="1" fill="currentColor" opacity="0.5"/>
-            </svg>
-            <h1
-              className="text-[14px] font-semibold tracking-[-0.02em]"
-              style={{ color: 'var(--text-primary, #37352F)' }}
-            >
-              @hellogugunim
-            </h1>
-            <span
-              className="text-[12px] tabular-nums"
-              style={{ color: 'var(--text-tertiary, #C4C3C0)' }}
-            >
-              · {data.posts.length}
-            </span>
+        <div className="max-w-xl mx-auto px-4 h-12 flex items-center justify-between">
+          <div>
+            <span className="text-[14px] font-bold" style={{ color: 'var(--text-main)' }}>@hellogugunim</span>
+            <span className="text-[12px] ml-2" style={{ color: 'var(--text-muted)' }}>{data.posts.length}개</span>
           </div>
-
           <button
             onClick={load}
             disabled={loading}
-            className="text-[12px] px-3 py-1 rounded-md transition-colors duration-100 disabled:opacity-40"
-            style={{
-              color: 'var(--text-secondary, #9B9A97)',
-              border: '1px solid var(--border, #E9E9E7)',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'var(--item-hover)')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            className="text-[12px] px-3 py-1 rounded-lg font-medium transition-colors disabled:opacity-40"
+            style={{ background: 'var(--copy-bg)', color: 'var(--copy-text)', border: '1px solid var(--border)' }}
           >
             새로고침
           </button>
@@ -230,29 +187,21 @@ export default function Home() {
       </header>
 
       {/* 피드 */}
-      <div className="max-w-2xl mx-auto px-6 py-2">
+      <div className="max-w-xl mx-auto px-4 py-4 space-y-3">
         {data.posts.length === 0 ? (
-          <div className="py-32 text-center">
-            <p className="text-[14px]" style={{ color: 'var(--text-secondary)' }}>
-              아직 생성된 포스팅이 없어요
-            </p>
+          <div className="py-24 text-center">
+            <p className="text-[13px]" style={{ color: 'var(--text-muted)' }}>아직 생성된 포스팅이 없어요</p>
           </div>
         ) : (
           <>
-            <div className="py-2">
-              {visible.map((post, i) => (
-                <PostItem key={i} index={i + 1} post={post} />
-              ))}
-            </div>
-            <div ref={sentinelRef} className="py-10 text-center">
+            {visible.map((post, i) => (
+              <PostItem key={i} index={i + 1} post={post} />
+            ))}
+            <div ref={sentinelRef} className="py-8 text-center">
               {hasMore ? (
-                <span className="text-[12px]" style={{ color: 'var(--text-tertiary)' }}>
-                  불러오는 중...
-                </span>
+                <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>불러오는 중...</p>
               ) : (
-                <span className="text-[12px]" style={{ color: 'var(--text-tertiary)' }}>
-                  총 {data.posts.length}개 · 끝
-                </span>
+                <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>전체 {data.posts.length}개</p>
               )}
             </div>
           </>
