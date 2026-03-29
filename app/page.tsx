@@ -55,7 +55,7 @@ function PostItem({ index, post }: { index: number; post: Post | string }) {
       </div>
 
       {/* 본문 */}
-      <p className="text-[15px] leading-[1.75] text-[var(--text-main)] break-keep mb-4">
+      <p className="text-[15px] leading-[1.75] text-[var(--text-main)] break-keep mb-4 whitespace-pre-line">
         {content}
       </p>
 
