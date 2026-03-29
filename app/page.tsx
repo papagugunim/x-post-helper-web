@@ -35,9 +35,31 @@ function PostItem({ index, post }: { index: number; post: Post | string }) {
   }
 
   return (
-    <div className="border border-[var(--border)] rounded-xl p-4 bg-[var(--card-bg)] hover:bg-[var(--card-hover)] transition-colors">
+    <div className="relative border border-[var(--border)] rounded-xl p-4 bg-[var(--card-bg)] hover:bg-[var(--card-hover)] transition-colors">
+      {/* 복사 아이콘 - 우상단 */}
+      <button
+        onClick={copy}
+        className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150"
+        style={{
+          background: copied ? 'var(--copy-done-bg)' : 'transparent',
+          color: copied ? 'var(--copy-done-text)' : 'var(--text-muted)',
+        }}
+        title="복사"
+      >
+        {copied ? (
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M2 7l3.5 3.5L12 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        ) : (
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+            <path d="M4 4V3a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1h-1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+          </svg>
+        )}
+      </button>
+
       {/* 상단: 번호 + 날짜 + 출처 */}
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-3 pr-8">
         <span className="text-[11px] font-bold text-[var(--text-muted)] tabular-nums">#{index}</span>
         {createdAt && (
           <span className="text-[11px] text-[var(--text-muted)]">{formatMSK(createdAt)} MSK</span>
@@ -55,22 +77,9 @@ function PostItem({ index, post }: { index: number; post: Post | string }) {
       </div>
 
       {/* 본문 */}
-      <p className="text-[15px] leading-[1.75] text-[var(--text-main)] break-keep mb-4 whitespace-pre-line">
+      <p className="text-[15px] leading-[1.75] text-[var(--text-main)] break-keep whitespace-pre-line">
         {content}
       </p>
-
-      {/* 복사 버튼 */}
-      <button
-        onClick={copy}
-        className="w-full py-2 rounded-lg text-[13px] font-semibold transition-all duration-150"
-        style={{
-          background: copied ? 'var(--copy-done-bg)' : 'var(--copy-bg)',
-          color: copied ? 'var(--copy-done-text)' : 'var(--copy-text)',
-          border: '1px solid var(--copy-border)',
-        }}
-      >
-        {copied ? '✓ 복사됨' : '복사하기'}
-      </button>
     </div>
   )
 }
