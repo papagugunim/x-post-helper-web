@@ -15,11 +15,35 @@ interface PostsData {
 
 function formatMSK(iso: string | null | undefined) {
   if (!iso) return null
-  return new Date(iso).toLocaleString('ko-KR', {
+  const d = new Date(iso)
+  return d.toLocaleString('ko-KR', {
     timeZone: 'Europe/Moscow',
     month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit',
   })
+}
+
+function Avatar({ size = 36 }: { size?: number }) {
+  return (
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        background: 'linear-gradient(135deg, #1d6f42 0%, #2d5a27 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+        fontSize: size * 0.38,
+        fontWeight: 700,
+        color: '#fff',
+        letterSpacing: '-0.02em',
+      }}
+    >
+      H
+    </div>
+  )
 }
 
 function PostItem({ index, post }: { index: number; post: Post | string }) {
@@ -54,86 +78,239 @@ function PostItem({ index, post }: { index: number; post: Post | string }) {
   }
 
   return (
-    <div className="relative border border-[var(--border)] rounded-xl p-4 bg-[var(--card-bg)] hover:bg-[var(--card-hover)] transition-colors">
-      {/* 복사 아이콘 - 우상단 */}
-      <button
-        onClick={copy}
-        className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150"
-        style={{
-          background: copied ? 'var(--copy-done-bg)' : 'transparent',
-          color: copied ? 'var(--copy-done-text)' : 'var(--text-muted)',
-        }}
-        title="복사"
-      >
-        {copied ? (
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M2 7l3.5 3.5L12 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        ) : (
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
-            <path d="M4 4V3a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1h-1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-          </svg>
-        )}
-      </button>
-
-      {/* 상단: 번호 + 날짜 + 출처 */}
-      <div className="flex items-center gap-2 mb-3 pr-8">
-        <span className="text-[11px] font-bold text-[var(--text-muted)] tabular-nums">#{index}</span>
-        {createdAt && (
-          <span className="text-[11px] text-[var(--text-muted)]">{formatMSK(createdAt)} MSK</span>
-        )}
-        {link && (
-          <a
-            href={link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[11px] text-[var(--text-muted)] underline underline-offset-2 hover:text-[var(--text-sub)] transition-colors ml-auto"
-          >
-            출처
-          </a>
-        )}
+    <article
+      style={{
+        borderBottom: '1px solid var(--border)',
+        padding: '16px 16px 12px',
+        display: 'flex',
+        gap: '12px',
+        transition: 'background 0.15s',
+      }}
+      onMouseEnter={e => (e.currentTarget.style.background = 'var(--card-hover)')}
+      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+    >
+      {/* 아바타 */}
+      <div style={{ paddingTop: 2 }}>
+        <Avatar size={40} />
       </div>
 
-      {/* 본문 */}
-      <p className="text-[15px] leading-[1.75] text-[var(--text-main)] break-keep whitespace-pre-line mb-3">
-        {content}
-      </p>
+      {/* 콘텐츠 영역 */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {/* 상단: 이름 + 핸들 + 날짜 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-main)', lineHeight: 1 }}>
+            hellogugunim
+          </span>
+          <span style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1 }}>
+            @hellogugunim
+          </span>
+          {createdAt && (
+            <>
+              <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>·</span>
+              <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                {formatMSK(createdAt)} MSK
+              </span>
+            </>
+          )}
+          <span style={{ fontSize: 12, color: 'var(--text-muted)', marginLeft: 'auto', opacity: 0.5 }}>
+            #{index}
+          </span>
+        </div>
 
-      {/* 좋아요 / 싫어요 */}
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => sendVote('like')}
-          disabled={voting}
-          className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[12px] transition-all duration-150 disabled:opacity-50"
+        {/* 본문 */}
+        <p
           style={{
-            background: vote === 'like' ? '#1a2e1a' : 'transparent',
-            color: vote === 'like' ? '#6bcf6b' : 'var(--text-muted)',
-            border: `1px solid ${vote === 'like' ? '#2d5a2d' : 'var(--border)'}`,
+            fontSize: 15,
+            lineHeight: 1.7,
+            color: 'var(--text-main)',
+            whiteSpace: 'pre-line',
+            wordBreak: 'keep-all',
+            overflowWrap: 'break-word',
+            margin: '0 0 12px',
           }}
         >
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-            <path d="M1 6.5L4 2l1.5 2.5h2L9 1l1 .5v4.5h1.5l.5.5-3 5H4L1 7.5V6.5z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
-          </svg>
-          좋아
-        </button>
-        <button
-          onClick={() => sendVote('dislike')}
-          disabled={voting}
-          className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[12px] transition-all duration-150 disabled:opacity-50"
-          style={{
-            background: vote === 'dislike' ? '#2e1a1a' : 'transparent',
-            color: vote === 'dislike' ? '#cf6b6b' : 'var(--text-muted)',
-            border: `1px solid ${vote === 'dislike' ? '#5a2d2d' : 'var(--border)'}`,
-          }}
-        >
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-            <path d="M1 6.5L4 11l1.5-2.5h2L9 12l1-.5V7h1.5l.5-.5-3-5H4L1 5.5V6.5z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
-          </svg>
-          별로
-        </button>
+          {content}
+        </p>
+
+        {/* 하단 액션 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          {/* 좋아요 */}
+          <ActionButton
+            onClick={() => sendVote('like')}
+            disabled={voting}
+            active={vote === 'like'}
+            activeColor="#1d9bf0"
+            activeBg="rgba(29,155,240,0.12)"
+            hoverBg="rgba(29,155,240,0.08)"
+            label="좋아"
+            icon={<HeartIcon filled={vote === 'like'} />}
+          />
+
+          {/* 싫어요 */}
+          <ActionButton
+            onClick={() => sendVote('dislike')}
+            disabled={voting}
+            active={vote === 'dislike'}
+            activeColor="#f4212e"
+            activeBg="rgba(244,33,46,0.12)"
+            hoverBg="rgba(244,33,46,0.08)"
+            label="별로"
+            icon={<DislikeIcon filled={vote === 'dislike'} />}
+          />
+
+          {/* 출처 */}
+          {link && (
+            <a
+              href={link}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                marginLeft: 4,
+                fontSize: 13,
+                color: 'var(--text-muted)',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 3,
+                padding: '4px 8px',
+                borderRadius: 999,
+                transition: 'background 0.15s, color 0.15s',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.background = 'rgba(29,155,240,0.08)'
+                ;(e.currentTarget as HTMLElement).style.color = '#1d9bf0'
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.background = 'transparent'
+                ;(e.currentTarget as HTMLElement).style.color = 'var(--text-muted)'
+              }}
+            >
+              <LinkIcon />
+              출처
+            </a>
+          )}
+
+          {/* 복사 */}
+          <div style={{ marginLeft: 'auto' }}>
+            <button
+              onClick={copy}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                fontSize: 13,
+                padding: '4px 10px',
+                borderRadius: 999,
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'background 0.15s, color 0.15s',
+                background: copied ? 'rgba(29,155,240,0.15)' : 'transparent',
+                color: copied ? '#1d9bf0' : 'var(--text-muted)',
+              }}
+              onMouseEnter={e => {
+                if (!copied) {
+                  (e.currentTarget as HTMLElement).style.background = 'rgba(29,155,240,0.08)'
+                  ;(e.currentTarget as HTMLElement).style.color = '#1d9bf0'
+                }
+              }}
+              onMouseLeave={e => {
+                if (!copied) {
+                  (e.currentTarget as HTMLElement).style.background = 'transparent'
+                  ;(e.currentTarget as HTMLElement).style.color = 'var(--text-muted)'
+                }
+              }}
+              title="복사"
+            >
+              {copied ? <CheckIcon /> : <CopyIcon />}
+              {copied ? '복사됨' : '복사'}
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    </article>
+  )
+}
+
+function ActionButton({
+  onClick, disabled, active, activeColor, activeBg, hoverBg, label, icon
+}: {
+  onClick: () => void
+  disabled: boolean
+  active: boolean
+  activeColor: string
+  activeBg: string
+  hoverBg: string
+  label: string
+  icon: React.ReactNode
+}) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 4,
+        fontSize: 13,
+        padding: '4px 8px',
+        borderRadius: 999,
+        border: 'none',
+        cursor: disabled ? 'default' : 'pointer',
+        opacity: disabled ? 0.5 : 1,
+        transition: 'background 0.15s, color 0.15s',
+        background: active ? activeBg : hovered ? hoverBg : 'transparent',
+        color: active ? activeColor : hovered ? activeColor : 'var(--text-muted)',
+      }}
+    >
+      {icon}
+      {label}
+    </button>
+  )
+}
+
+function HeartIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+
+function DislikeIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8">
+      <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10zM17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+
+function CopyIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+    </svg>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  )
+}
+
+function LinkIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
   )
 }
 
@@ -155,32 +332,26 @@ export default function Home() {
       root.classList.toggle('dark', dark)
       if (dark) {
         root.style.setProperty('--bg', '#000000')
-        root.style.setProperty('--bg-header', 'rgba(0,0,0,0.92)')
-        root.style.setProperty('--border', '#222222')
-        root.style.setProperty('--card-bg', '#0d0d0d')
-        root.style.setProperty('--card-hover', '#141414')
-        root.style.setProperty('--text-main', '#e8e8e8')
-        root.style.setProperty('--text-sub', '#aaaaaa')
-        root.style.setProperty('--text-muted', '#555555')
-        root.style.setProperty('--copy-bg', '#222222')
-        root.style.setProperty('--copy-border', '#333333')
-        root.style.setProperty('--copy-text', '#cccccc')
-        root.style.setProperty('--copy-done-bg', '#1a2e1a')
-        root.style.setProperty('--copy-done-text', '#6bcf6b')
+        root.style.setProperty('--bg-header', 'rgba(0,0,0,0.85)')
+        root.style.setProperty('--border', '#2f3336')
+        root.style.setProperty('--card-hover', 'rgba(255,255,255,0.03)')
+        root.style.setProperty('--text-main', '#e7e9ea')
+        root.style.setProperty('--text-sub', '#71767b')
+        root.style.setProperty('--text-muted', '#536471')
+        root.style.setProperty('--btn-bg', '#eff3f4')
+        root.style.setProperty('--btn-text', '#0f1419')
+        root.style.setProperty('--btn-hover', '#d7dbdc')
       } else {
-        root.style.setProperty('--bg', '#f9f9f9')
-        root.style.setProperty('--bg-header', 'rgba(249,249,249,0.92)')
-        root.style.setProperty('--border', '#e5e5e5')
-        root.style.setProperty('--card-bg', '#ffffff')
-        root.style.setProperty('--card-hover', '#fafafa')
-        root.style.setProperty('--text-main', '#1a1a1a')
-        root.style.setProperty('--text-sub', '#555555')
-        root.style.setProperty('--text-muted', '#aaaaaa')
-        root.style.setProperty('--copy-bg', '#f4f4f4')
-        root.style.setProperty('--copy-border', '#e5e5e5')
-        root.style.setProperty('--copy-text', '#444444')
-        root.style.setProperty('--copy-done-bg', '#f0faf0')
-        root.style.setProperty('--copy-done-text', '#2d862d')
+        root.style.setProperty('--bg', '#ffffff')
+        root.style.setProperty('--bg-header', 'rgba(255,255,255,0.85)')
+        root.style.setProperty('--border', '#eff3f4')
+        root.style.setProperty('--card-hover', 'rgba(0,0,0,0.02)')
+        root.style.setProperty('--text-main', '#0f1419')
+        root.style.setProperty('--text-sub', '#536471')
+        root.style.setProperty('--text-muted', '#8b98a5')
+        root.style.setProperty('--btn-bg', '#0f1419')
+        root.style.setProperty('--btn-text', '#ffffff')
+        root.style.setProperty('--btn-hover', '#272c30')
       }
     }
     const mq = window.matchMedia('(prefers-color-scheme: dark)')
@@ -196,7 +367,7 @@ export default function Home() {
     try {
       const res = await fetch('/api/generate', { method: 'POST' })
       if (res.ok) {
-        setGenerateMsg('생성 요청 완료! 약 1~2분 후 새로고침하세요.')
+        setGenerateMsg('요청 완료! 1~2분 후 새로고침하세요.')
       } else {
         const err = await res.json()
         setGenerateMsg(`오류: ${err.error}`)
@@ -205,7 +376,7 @@ export default function Home() {
       setGenerateMsg('요청 실패')
     }
     setGenerating(false)
-    setTimeout(() => setGenerateMsg(''), 5000)
+    setTimeout(() => setGenerateMsg(''), 6000)
   }
 
   useEffect(() => {
@@ -243,8 +414,11 @@ export default function Home() {
 
   if (loading || !data) {
     return (
-      <main className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg, #f9f9f9)' }}>
-        <p className="text-[13px]" style={{ color: 'var(--text-muted, #aaaaaa)' }}>불러오는 중...</p>
+      <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg, #000)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+          <Avatar size={48} />
+          <p style={{ fontSize: 14, color: 'var(--text-muted, #536471)' }}>불러오는 중...</p>
+        </div>
       </main>
     )
   }
@@ -253,65 +427,108 @@ export default function Home() {
   const hasMore = visibleCount < data.posts.length
 
   return (
-    <main className="min-h-screen" style={{ background: 'var(--bg, #f9f9f9)' }}>
+    <main style={{ minHeight: '100vh', background: 'var(--bg, #000)', maxWidth: 600, margin: '0 auto' }}>
       {/* 헤더 */}
       <header
-        className="sticky top-0 z-10 backdrop-blur-sm"
-        style={{ background: 'var(--bg-header)', borderBottom: '1px solid var(--border)' }}
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          background: 'var(--bg-header)',
+          borderBottom: '1px solid var(--border)',
+        }}
       >
-        <div className="max-w-xl mx-auto px-4 h-12 flex items-center justify-between">
-          <div>
-            <span className="text-[14px] font-bold" style={{ color: 'var(--text-main)' }}>@hellogugunim</span>
-            <span className="text-[12px] ml-2" style={{ color: 'var(--text-muted)' }}>{data.posts.length}개</span>
+        <div style={{ padding: '0 16px', height: 56, display: 'flex', alignItems: 'center', gap: 12 }}>
+          {/* 프로필 */}
+          <Avatar size={34} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-main)', lineHeight: 1.2 }}>
+              @hellogugunim
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1 }}>
+              {data.posts.length}개 포스팅
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            {generateMsg && (
-              <span className="text-[11px]" style={{ color: 'var(--text-sub)' }}>{generateMsg}</span>
-            )}
-            <button
-              onClick={generate}
-              disabled={generating}
-              className="text-[12px] px-3 py-1 rounded-lg font-medium transition-colors disabled:opacity-40"
-              style={{ background: 'var(--copy-done-bg)', color: 'var(--copy-done-text)', border: '1px solid var(--border)' }}
-            >
-              {generating ? '요청 중...' : '지금 생성'}
-            </button>
-          </div>
+
+          {/* 상태 메시지 */}
+          {generateMsg && (
+            <span style={{ fontSize: 12, color: 'var(--text-sub)', maxWidth: 140, textAlign: 'right', lineHeight: 1.3 }}>
+              {generateMsg}
+            </span>
+          )}
+
+          {/* 생성 버튼 */}
+          <button
+            onClick={generate}
+            disabled={generating}
+            style={{
+              fontSize: 14,
+              fontWeight: 700,
+              padding: '6px 16px',
+              borderRadius: 999,
+              border: 'none',
+              cursor: generating ? 'default' : 'pointer',
+              opacity: generating ? 0.5 : 1,
+              background: 'var(--btn-bg)',
+              color: 'var(--btn-text)',
+              transition: 'background 0.15s',
+              whiteSpace: 'nowrap',
+            }}
+            onMouseEnter={e => { if (!generating) (e.currentTarget as HTMLElement).style.background = 'var(--btn-hover)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'var(--btn-bg)' }}
+          >
+            {generating ? '요청 중...' : '지금 생성'}
+          </button>
         </div>
       </header>
 
       {/* 피드 */}
-      <div className="max-w-xl mx-auto px-4 py-4 space-y-3">
-        {data.posts.length === 0 ? (
-          <div className="py-24 text-center">
-            <p className="text-[13px]" style={{ color: 'var(--text-muted)' }}>아직 생성된 포스팅이 없어요</p>
+      {data.posts.length === 0 ? (
+        <div style={{ padding: '80px 16px', textAlign: 'center' }}>
+          <p style={{ fontSize: 14, color: 'var(--text-muted)' }}>아직 생성된 포스팅이 없어요</p>
+        </div>
+      ) : (
+        <>
+          {visible.map((post, i) => (
+            <PostItem key={i} index={i + 1} post={post} />
+          ))}
+          <div ref={sentinelRef} style={{ padding: '32px 0', textAlign: 'center' }}>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+              {hasMore ? '불러오는 중...' : `전체 ${data.posts.length}개`}
+            </p>
           </div>
-        ) : (
-          <>
-            {visible.map((post, i) => (
-              <PostItem key={i} index={i + 1} post={post} />
-            ))}
-            <div ref={sentinelRef} className="py-8 text-center">
-              {hasMore ? (
-                <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>불러오는 중...</p>
-              ) : (
-                <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>전체 {data.posts.length}개</p>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+        </>
+      )}
 
       {/* 맨 위로 버튼 */}
       {showTop && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full flex items-center justify-center shadow-md transition-all"
-          style={{ background: 'var(--copy-bg)', border: '1px solid var(--border)', color: 'var(--text-sub)' }}
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            zIndex: 50,
+            width: 40,
+            height: 40,
+            borderRadius: '50%',
+            border: '1px solid var(--border)',
+            background: 'var(--bg-header)',
+            backdropFilter: 'blur(12px)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--text-sub)',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
+            transition: 'background 0.15s',
+          }}
           aria-label="맨 위로"
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M8 12V4M4 8l4-4 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="18 15 12 9 6 15"/>
           </svg>
         </button>
       )}

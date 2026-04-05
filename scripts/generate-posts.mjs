@@ -37,7 +37,7 @@ async function generatePosts(news) {
 - 모스크바 현지에서 직접 보고 느끼는 관점 포함
 ---
 
---- 실제 트윗 예시 (말투 참고) ---
+--- 실제 트윗 예시 (이 말투와 톤을 정확히 따라할 것) ---
 예시1 (경제 분석):
 "우랄 원유 가격이 연저점 50달러에서 95달러까지 올라왔음\n중동전쟁으로 호르무즈 해협이 막히면서, 거기 안 거치는 러시아 석유가 반사 이익 보는 중.\n유가 90달러 가면 550억 달러 추가 수입이라는 분석이 있음.\n이란전쟁이 역설적으로 러시아 전쟁 자금 채워주는 꼴이 됐음."
 
@@ -47,25 +47,37 @@ async function generatePosts(news) {
 예시3 (대비/아이러니):
 "EU: '우리의 제재는 러시아를 궤멸시킬 것이다.'\n현실: 러시아 디젤 가격은 리터당 약 0.80유로인 반면 유럽은 리터당 약 2.20유로.\n제재가 러시아보다 유럽 에너지 비용을 더 올렸다는 분석도 있음."
 
-예시4 (정치 분석):
+예시4 (정치 + 개인 의견):
 "내가 친러여서 그런지 모르겠지만, 솔직히 맞는 말 같음. (반박시 니말 맞음)\n푸틴: '우리는 유럽에 값싼 가스 공급했는데, 경제 감각 없는 정치인들이 경제에 개입했다.'\n에너지 전쟁의 승자가 누구인지는 5년 뒤에 판명날 것 같음."
 
 예시5 (요약 리스트):
 "오늘자 러시아 경제 정리\n유가: 90달러 돌파\n루블: 4주 연속 하락\n재정: 석유값 올랐는데도 적자\n물가: 중앙은행 기준금리 21% 유지\n결론: 전쟁 비용이 생각보다 훨씬 큼"
+
+예시6 (현지 관찰 + 감성):
+"현대 불곰국 주유소 기름가격 1달러가 채 안됨\n한국은 리터당 1,700원인데, 여기는 100루블 (약 1,400원)에 거의 꽉 채움.\n모스크바 살면서 그나마 기름값은 진짜 싸다는 거 인정."
+
+예시7 (그럼 그렇지 스타일):
+"그럼 그렇지...\n불곰국 중앙은행이 기준금리 21% 유지한다고 발표.\n물가 잡겠다고 올린 거지만, 기업들 대출 이자 부담이 장난 아님.\n전쟁 중에 고금리 유지하는 게 맞나 싶음."
 ---
+
+페르소나 특징 (반드시 반영):
+- 러시아를 "불곰국"으로 자연스럽게 표현 (모든 포스팅에 강제 X, 어울릴 때만)
+- "그럼 그렇지...", "역시나" - 예상된 상황에 대한 반응
+- "솔직히", "내가 보기엔", "모스크바에서 보면" - 현지인 시각 강조
+- 한국/러시아 비교 (가격, 제도, 문화) - 독자 공감 유도
+- "제발", "ㅠㅠ" - 진심 어린 감정 표현 (남발 금지)
 
 포스팅 구조 (뉴스에 맞게 선택):
 A. 강한 훅 한 줄 → 대시(-) → 팩트+수치+구조 분석 → 핵심 한 줄 정리
-B. 주제/국가 → 수치 데이터 나열 → 의미 분석
-C. 대비 구조 ("A라고 했지만, 현실은 B") → 분석
-D. "오늘자 [주제] 정리" → 항목별 콜론(:) 리스트
+B. 주제 한 줄 → 수치 데이터 → 한/러 비교 → 의미 분석
+C. 대비 구조 ("A라고 했지만, 현실은 B") → 현지 시각
+D. "오늘자 [주제] 정리" → 항목별 콜론(:) 리스트 → 결론 한 줄
 
 포스팅 스타일 규칙:
 - 오직 한국어만 사용 (영어, 러시아어, 한자, 외국어 절대 사용 금지)
-- 반드시 5줄 이상, 줄바꿈(\\n) 활용
-- 전문적인 내용이지만 말투는 구어체로: "~셈", "~구먼", "~싶음", "솔직히", "희한하게", "~인 듯" 자연스럽게 사용
+- 반드시 5줄 이상, 줄바꿈(\\n) 활용해서 리듬감 있게
+- 전문적 분석이지만 말투는 구어체: "~셈", "~구먼", "~싶음", "솔직히", "희한하게", "~인 듯" 자연스럽게
 - "ㅠㅠ", "ㄷㄷ", "후덜덜" 어울릴 때만 가끔. "ㅋㅋ"는 절대 사용 금지
-- "반박시 니말 맞음" 같은 표현 어울릴 때 가끔
 - 해시태그 없음, 이모지 없거나 최대 1개
 - content 안에 URL이나 링크 절대 포함 금지
 - 마지막 줄은 반드시 완결된 형태로 끝낼 것
@@ -154,21 +166,7 @@ async function main() {
   const news = await fetchRecentNews()
   console.log(`뉴스 ${news.length}개 로드됨`)
 
-  // 25개씩 배치 처리 (토큰 초과 방지)
-  console.log('포스팅 생성 중... (배치 1/2)')
-  const batch1 = await generatePosts(news.slice(0, 25))
-  console.log(`배치1: ${batch1.length}개 생성됨`)
-
-  console.log('포스팅 생성 중... (배치 2/2)')
-  const batch2 = await generatePosts(news.slice(25))
-  console.log(`배치2: ${batch2.length}개 생성됨`)
-
-  const newPosts = [...batch1, ...batch2]
-  const now = new Date().toISOString()
-  const stamped = newPosts.map(p => ({ ...p, created_at: now }))
-  console.log(`포스팅 ${stamped.length}개 생성됨`)
-
-  // 기존 포스팅 불러오기
+  // 기존 포스팅 불러오기 (중복 체크용)
   const postsPath = join(ROOT, 'data', 'posts.json')
   let existing = []
   try {
@@ -176,6 +174,38 @@ async function main() {
     const parsed = JSON.parse(raw)
     existing = parsed.posts || []
   } catch { /* 파일 없으면 빈 배열 */ }
+
+  // 이미 포스팅된 링크 추출
+  const existingLinks = new Set(
+    existing.map(p => (typeof p === 'string' ? '' : p.link)).filter(Boolean)
+  )
+
+  // 신규 뉴스만 필터링 (이미 처리된 링크 제외)
+  const freshNews = news.filter(n => n.link && !existingLinks.has(n.link))
+  console.log(`신규 뉴스 ${freshNews.length}개 (중복 ${news.length - freshNews.length}개 제외)`)
+
+  if (freshNews.length === 0) {
+    console.log('신규 뉴스 없음, 종료')
+    return
+  }
+
+  // 25개씩 배치 처리 (토큰 초과 방지)
+  const batches = []
+  for (let i = 0; i < freshNews.length; i += 25) {
+    batches.push(freshNews.slice(i, i + 25))
+  }
+
+  let newPosts = []
+  for (let i = 0; i < batches.length; i++) {
+    console.log(`포스팅 생성 중... (배치 ${i + 1}/${batches.length})`)
+    const result = await generatePosts(batches[i])
+    console.log(`배치${i + 1}: ${result.length}개 생성됨`)
+    newPosts = [...newPosts, ...result]
+  }
+
+  const now = new Date().toISOString()
+  const stamped = newPosts.map(p => ({ ...p, created_at: now }))
+  console.log(`포스팅 ${stamped.length}개 생성됨`)
 
   // 새 포스팅을 앞에 추가, 최대 500개 유지
   const all = [...stamped, ...existing].slice(0, 500)
