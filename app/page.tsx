@@ -99,10 +99,7 @@ function PostItem({ index, post }: { index: number; post: Post | string }) {
         {/* 상단: 이름 + 핸들 + 날짜 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-main)', lineHeight: 1 }}>
-            hellogugunim
-          </span>
-          <span style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1 }}>
-            @hellogugunim
+            구구엑스
           </span>
           {createdAt && (
             <>
@@ -445,7 +442,7 @@ export default function Home() {
           <Avatar size={34} />
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-main)', lineHeight: 1.2 }}>
-              @hellogugunim
+              구구엑스
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1 }}>
               {data.posts.length}개 포스팅
