@@ -14,7 +14,37 @@ async function fetchRecentNews() {
   // 최근 6시간 내 뉴스 우선, 없으면 최신 50개
   const cutoff = new Date(Date.now() - 6 * 60 * 60 * 1000)
   const recent = items.filter(item => new Date(item.published_at) >= cutoff)
-  return recent.length >= 5 ? recent.slice(0, 50) : items.slice(0, 50)
+  const rnewsItems = recent.length >= 5 ? recent.slice(0, 50) : items.slice(0, 50)
+
+  // Google News RSS (한국어 러시아 뉴스)
+  let googleItems = []
+  try {
+    const rssRes = await fetch('https://news.google.com/rss/search?q=러시아&hl=ko&gl=KR&ceid=KR:ko')
+    if (rssRes.ok) {
+      const xml = await rssRes.text()
+      const entries = xml.match(/<item>[\s\S]*?<\/item>/g) || []
+      googleItems = entries.slice(0, 30).map(item => {
+        const title = (item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || item.match(/<title>(.*?)<\/title>/))?.[1] || ''
+        const link = (item.match(/<link>(.*?)<\/link>/) || [])[1] || ''
+        const pubDate = (item.match(/<pubDate>(.*?)<\/pubDate>/) || [])[1] || ''
+        const source = (item.match(/<source[^>]*>(.*?)<\/source>/) || [])[1] || '한국 언론'
+        return {
+          title: title.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>'),
+          link,
+          topic: source,
+          published_at: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
+        }
+      }).filter(i => i.title && i.link)
+      console.log(`Google News: ${googleItems.length}개 로드됨`)
+    }
+  } catch (e) {
+    console.warn('Google News RSS 실패:', e.message)
+  }
+
+  // 중복 링크 제거 후 합치기
+  const allLinks = new Set(rnewsItems.map(i => i.link))
+  const uniqueGoogle = googleItems.filter(i => !allLinks.has(i.link))
+  return [...rnewsItems, ...uniqueGoogle]
 }
 
 async function generatePosts(news) {
