@@ -48,8 +48,8 @@ async function fetchRecentNews() {
 }
 
 async function generatePosts(news) {
-  const apiKey = process.env.GROQ_API_KEY
-  if (!apiKey) throw new Error('GROQ_API_KEY가 설정되지 않았습니다')
+  const apiKey = process.env.GH_TOKEN
+  if (!apiKey) throw new Error('GH_TOKEN이 설정되지 않았습니다')
 
   const newsList = news.map((item, i) =>
     `${i + 1}. [${item.topic}] ${item.title}\n   링크: ${item.link}`
@@ -124,7 +124,7 @@ ${newsList}
 - JSON 외 다른 텍스트 절대 포함 금지`
 
   const res = await fetch(
-    'https://api.groq.com/openai/v1/chat/completions',
+    'https://models.inference.ai.azure.com/chat/completions',
     {
       method: 'POST',
       headers: {
@@ -132,7 +132,7 @@ ${newsList}
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'gpt-4o-mini',
         max_tokens: 2000,
         messages: [
           {
@@ -149,7 +149,7 @@ ${newsList}
 
   if (!res.ok) {
     const err = await res.text()
-    throw new Error(`Groq API error: ${res.status} - ${err}`)
+    throw new Error(`GitHub Models API error: ${res.status} - ${err}`)
   }
 
   const data = await res.json()
