@@ -132,7 +132,7 @@ ${newsList}
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 2000,
         messages: [
           {
@@ -211,7 +211,7 @@ async function main() {
   )
 
   // 신규 뉴스만 필터링 (이미 처리된 링크 제외), 최대 15개
-  const freshNews = news.filter(n => n.link && !existingLinks.has(n.link)).slice(0, 15)
+  const freshNews = news.filter(n => n.link && !existingLinks.has(n.link)).slice(0, 9)
   console.log(`신규 뉴스 ${freshNews.length}개 (중복 ${news.length - freshNews.length}개 이상 제외)`)
 
   if (freshNews.length === 0) {
