@@ -225,11 +225,27 @@ async function main() {
     batches.push(freshNews.slice(i, i + 3))
   }
 
+  const generateWithRetry = async (news, maxRetries = 5) => {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        return await generatePosts(news)
+      } catch (e) {
+        if (e.message.includes('429') && attempt < maxRetries - 1) {
+          const waitMatch = e.message.match(/try again in (\d+\.?\d*)s/)
+          const waitSecs = waitMatch ? Math.ceil(parseFloat(waitMatch[1])) + 3 : 65
+          console.log(`Rate limited. ${waitSecs}초 대기 후 재시도...`)
+          await new Promise(r => setTimeout(r, waitSecs * 1000))
+        } else {
+          throw e
+        }
+      }
+    }
+  }
+
   let newPosts = []
   for (let i = 0; i < batches.length; i++) {
-    if (i > 0) await new Promise(r => setTimeout(r, 30000)) // 30초 딜레이 (TPM 방지)
     console.log(`포스팅 생성 중... (배치 ${i + 1}/${batches.length})`)
-    const result = await generatePosts(batches[i])
+    const result = await generateWithRetry(batches[i])
     console.log(`배치${i + 1}: ${result.length}개 생성됨`)
     newPosts = [...newPosts, ...result]
   }
