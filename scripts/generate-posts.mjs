@@ -227,7 +227,7 @@ async function main() {
 
   let newPosts = []
   for (let i = 0; i < batches.length; i++) {
-    if (i > 0) await new Promise(r => setTimeout(r, 10000)) // 10초 딜레이 (TPM 방지)
+    if (i > 0) await new Promise(r => setTimeout(r, 30000)) // 30초 딜레이 (TPM 방지)
     console.log(`포스팅 생성 중... (배치 ${i + 1}/${batches.length})`)
     const result = await generatePosts(batches[i])
     console.log(`배치${i + 1}: ${result.length}개 생성됨`)
