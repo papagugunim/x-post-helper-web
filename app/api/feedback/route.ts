@@ -16,52 +16,66 @@ async function getFileSha(token: string): Promise<{ sha: string; content: string
 
 export async function POST(req: NextRequest) {
   const token = process.env.GITHUB_TOKEN
-  if (!token) return NextResponse.json({ error: 'GITHUB_TOKEN 없음' }, { status: 500 })
+  if (!token) return NextResponse.json({ error: '서버 오류' }, { status: 500 })
 
-  const { content, vote, created_at } = await req.json()
-  if (!content || !vote) return NextResponse.json({ error: '필수 파라미터 없음' }, { status: 400 })
-
-  const existing = await getFileSha(token)
-  let entries: object[] = []
-
-  if (existing) {
-    try { entries = JSON.parse(existing.content).entries || [] } catch { entries = [] }
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: '잘못된 요청' }, { status: 400 })
   }
 
-  entries.push({
-    content: content.slice(0, 200),
-    vote,
-    created_at: created_at || null,
-    voted_at: new Date().toISOString(),
-  })
+  const { content, vote, created_at } = body as Record<string, unknown>
 
-  const newContent = JSON.stringify({ entries }, null, 2)
-  const encoded = Buffer.from(newContent).toString('base64')
-
-  const body: Record<string, unknown> = {
-    message: `feedback: ${vote}`,
-    content: encoded,
-    branch: BRANCH,
+  if (typeof content !== 'string' || !content) {
+    return NextResponse.json({ error: '잘못된 요청' }, { status: 400 })
   }
-  if (existing) body.sha = existing.sha
+  if (vote !== 'like' && vote !== 'dislike') {
+    return NextResponse.json({ error: '잘못된 요청' }, { status: 400 })
+  }
 
-  const res = await fetch(
-    `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`,
-    {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/vnd.github+json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
+  // race condition 대응: 409 충돌 시 최대 3회 재시도
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const existing = await getFileSha(token)
+    let entries: object[] = []
+    if (existing) {
+      try { entries = JSON.parse(existing.content).entries || [] } catch { entries = [] }
     }
-  )
 
-  if (!res.ok) {
-    const err = await res.text()
-    return NextResponse.json({ error: err }, { status: 500 })
+    entries.push({
+      content: content.slice(0, 200),
+      vote,
+      created_at: typeof created_at === 'string' ? created_at : null,
+      voted_at: new Date().toISOString(),
+    })
+
+    const newContent = JSON.stringify({ entries }, null, 2)
+    const encoded = Buffer.from(newContent).toString('base64')
+
+    const putBody: Record<string, unknown> = {
+      message: `feedback: ${vote}`,
+      content: encoded,
+      branch: BRANCH,
+    }
+    if (existing) putBody.sha = existing.sha
+
+    const res = await fetch(
+      `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(putBody),
+      }
+    )
+
+    if (res.ok) return NextResponse.json({ ok: true })
+    if (res.status === 409) continue // sha 충돌 → 재시도
+    return NextResponse.json({ error: '저장 실패' }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ error: '저장 실패 (충돌)' }, { status: 500 })
 }

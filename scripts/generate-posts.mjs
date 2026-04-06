@@ -169,7 +169,9 @@ ${newsList}
 
   // content 정제 및 외국어 포함 포스팅 필터링
   const cyrillic = /[а-яёА-ЯЁ]/
-  const foreignWord = /\b[a-zA-Z]{3,}\b/  // 3글자 이상 영어 단어 1개라도
+  // 허용 약어: 경제/정치 전문용어 (GDP, IMF, EU, NATO, WTO, UN, KHL, RPL 등)
+  const allowedAbbr = /^(GDP|GNP|IMF|EU|NATO|WTO|UN|KHL|RPL|UFC|UFC|KGB|FSB|CIA|USD|EUR|RUB|KRW|LNG|OPEC|SWIFT|G7|G20|BRI|CIS|SCO|CSTO)$/
+  const foreignWord = /\b[a-zA-Z]{4,}\b/  // 4글자 이상 영어 단어만 체크 (3글자 약어 허용)
   const chineseChar = /[\u4e00-\u9fff]/    // 한자
   const vietnamese = /[àáâãèéêìíòóôõùúýăđơưạặầẩảẫậắẳẵẻẽẹếềệỉịọốồổỗộớờởỡợụủứừựỳỵỷỹÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚÝĂĐƠƯ]/  // 베트남어 특수 문자
 
@@ -184,7 +186,9 @@ ${newsList}
     .filter(p => {
       const content = p.content || ''
       if (cyrillic.test(content)) return false    // 러시아어 제거
-      if (foreignWord.test(content)) return false // 영어 단어 제거
+      // 영어 단어 체크: 4글자+ 단어 중 허용 약어가 아닌 것
+      const englishWords = content.match(/\b[a-zA-Z]{4,}\b/g) || []
+      if (englishWords.some(w => !allowedAbbr.test(w.toUpperCase()))) return false
       if (chineseChar.test(content)) return false // 한자 제거
       if (vietnamese.test(content)) return false  // 베트남어 제거
       return true

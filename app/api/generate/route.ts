@@ -1,6 +1,16 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  // 간단한 비밀키 인증 (헤더 또는 바디로 전달)
+  const adminSecret = process.env.ADMIN_SECRET
+  if (adminSecret) {
+    const authHeader = req.headers.get('x-admin-secret')
+    const body = await req.json().catch(() => ({}))
+    if (authHeader !== adminSecret && body?.secret !== adminSecret) {
+      return NextResponse.json({ error: '인증 실패' }, { status: 401 })
+    }
+  }
+
   const token = process.env.GITHUB_TOKEN
   if (!token) {
     return NextResponse.json({ error: 'GITHUB_TOKEN이 설정되지 않았습니다' }, { status: 500 })
@@ -20,8 +30,7 @@ export async function POST() {
   )
 
   if (!res.ok) {
-    const err = await res.text()
-    return NextResponse.json({ error: `GitHub API 오류: ${res.status} - ${err}` }, { status: 500 })
+    return NextResponse.json({ error: '생성 요청 실패' }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true })

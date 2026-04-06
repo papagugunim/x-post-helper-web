@@ -316,6 +316,7 @@ const PAGE_SIZE = 20
 export default function Home() {
   const [data, setData] = useState<PostsData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [generateMsg, setGenerateMsg] = useState('')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
@@ -384,11 +385,18 @@ export default function Home() {
 
   const load = async () => {
     setLoading(true)
-    const res = await fetch('/api/posts')
-    const json = await res.json()
-    setData(json)
-    setVisibleCount(PAGE_SIZE)
-    setLoading(false)
+    setLoadError(false)
+    try {
+      const res = await fetch('/api/posts')
+      if (!res.ok) throw new Error('failed')
+      const json = await res.json()
+      setData(json)
+      setVisibleCount(PAGE_SIZE)
+    } catch {
+      setLoadError(true)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => { load() }, [])
@@ -409,12 +417,25 @@ export default function Home() {
     return () => observer.disconnect()
   }, [loadMore])
 
-  if (loading || !data) {
+  if (loading) {
     return (
       <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg, #000)' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
           <Avatar size={48} />
           <p style={{ fontSize: 14, color: 'var(--text-muted, #536471)' }}>불러오는 중...</p>
+        </div>
+      </main>
+    )
+  }
+
+  if (loadError || !data) {
+    return (
+      <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg, #000)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+          <p style={{ fontSize: 14, color: 'var(--text-muted, #536471)' }}>불러오기 실패</p>
+          <button onClick={load} style={{ fontSize: 13, padding: '6px 16px', borderRadius: 999, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-sub)', cursor: 'pointer' }}>
+            다시 시도
+          </button>
         </div>
       </main>
     )
@@ -488,9 +509,11 @@ export default function Home() {
         </div>
       ) : (
         <>
-          {visible.map((post, i) => (
-            <PostItem key={i} index={i + 1} post={post} />
-          ))}
+          {visible.map((post, i) => {
+            const p = typeof post === 'string' ? post : post
+            const key = typeof p === 'string' ? `str-${i}` : ((p as Post).link || (p as Post).created_at || `post-${i}`)
+            return <PostItem key={key} index={i + 1} post={p} />
+          })}
           <div ref={sentinelRef} style={{ padding: '32px 0', textAlign: 'center' }}>
             <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
               {hasMore ? '불러오는 중...' : `전체 ${data.posts.length}개`}
