@@ -133,7 +133,7 @@ ${newsList}
       },
       body: JSON.stringify({
         model: 'llama-3.1-8b-instant',
-        max_tokens: 4096,
+        max_tokens: 2000,
         messages: [
           {
             role: 'system',
@@ -210,23 +210,24 @@ async function main() {
     existing.map(p => (typeof p === 'string' ? '' : p.link)).filter(Boolean)
   )
 
-  // 신규 뉴스만 필터링 (이미 처리된 링크 제외)
-  const freshNews = news.filter(n => n.link && !existingLinks.has(n.link))
-  console.log(`신규 뉴스 ${freshNews.length}개 (중복 ${news.length - freshNews.length}개 제외)`)
+  // 신규 뉴스만 필터링 (이미 처리된 링크 제외), 최대 15개
+  const freshNews = news.filter(n => n.link && !existingLinks.has(n.link)).slice(0, 15)
+  console.log(`신규 뉴스 ${freshNews.length}개 (중복 ${news.length - freshNews.length}개 이상 제외)`)
 
   if (freshNews.length === 0) {
     console.log('신규 뉴스 없음, 종료')
     return
   }
 
-  // 25개씩 배치 처리 (토큰 초과 방지)
+  // 3개씩 배치 처리 (TPM 6000 한도 내 처리)
   const batches = []
-  for (let i = 0; i < freshNews.length; i += 25) {
-    batches.push(freshNews.slice(i, i + 25))
+  for (let i = 0; i < freshNews.length; i += 3) {
+    batches.push(freshNews.slice(i, i + 3))
   }
 
   let newPosts = []
   for (let i = 0; i < batches.length; i++) {
+    if (i > 0) await new Promise(r => setTimeout(r, 10000)) // 10초 딜레이 (TPM 방지)
     console.log(`포스팅 생성 중... (배치 ${i + 1}/${batches.length})`)
     const result = await generatePosts(batches[i])
     console.log(`배치${i + 1}: ${result.length}개 생성됨`)
