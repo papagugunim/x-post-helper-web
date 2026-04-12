@@ -218,6 +218,46 @@ ${newsList}
     })
 }
 
+// 텍스트에서 핵심 키워드 추출 (2글자 이상 명사/고유명사 위주)
+function extractKeywords(text) {
+  return (text.match(/[가-힣a-zA-Z]{2,}/g) || [])
+    .map(w => w.toLowerCase())
+    .filter(w => !['있음','있다','한다','됩니다','것이다','이다','하는','에서','으로','하고','그리고','하지만','때문에','있는','없는','이번','지난','현재','올해','내년','다음','이후','이전','대한','관련','통해','위해','따른','따라','based','that','this','with','from','have','been','will','also','more','than','just'].includes(w))
+}
+
+// 두 텍스트의 키워드 유사도 (0~1)
+function similarity(a, b) {
+  const ka = new Set(extractKeywords(a))
+  const kb = new Set(extractKeywords(b))
+  if (ka.size === 0 || kb.size === 0) return 0
+  const intersection = [...ka].filter(k => kb.has(k)).length
+  return intersection / Math.min(ka.size, kb.size)
+}
+
+// 뉴스 목록에서 주제가 겹치는 항목 제거 (제목 기준)
+function deduplicateNewsByTopic(newsItems, threshold = 0.5) {
+  const kept = []
+  for (const item of newsItems) {
+    const isDup = kept.some(k => similarity(item.title, k.title) >= threshold)
+    if (!isDup) kept.push(item)
+  }
+  return kept
+}
+
+// 생성된 포스팅 중 기존 포스팅과 내용이 너무 비슷한 것 제거
+function deduplicatePostsByContent(newPosts, existingPosts, threshold = 0.55) {
+  const recentExisting = existingPosts.slice(0, 100).map(p => typeof p === 'string' ? p : p.content)
+  const result = []
+  for (const post of newPosts) {
+    const content = typeof post === 'string' ? post : post.content
+    const dupWithExisting = recentExisting.some(e => similarity(content, e) >= threshold)
+    const dupWithNew = result.some(r => similarity(content, typeof r === 'string' ? r : r.content) >= threshold)
+    if (!dupWithExisting && !dupWithNew) result.push(post)
+    else console.log(`중복 포스팅 제외: ${content.slice(0, 40)}...`)
+  }
+  return result
+}
+
 async function main() {
   console.log('뉴스 가져오는 중...')
   const news = await fetchRecentNews()
@@ -252,13 +292,16 @@ async function main() {
 
   // 비율: 정치/경제 5개, 스포츠 3개, 연예/문화 3개, 구글뉴스(한국시각) 4개
   const pick = (arr, n) => arr.slice(0, n)
-  const freshNews = [
+  const freshNewsRaw = [
     ...pick(politicsNews, 5),
     ...pick(sportsNews, 3),
     ...pick(entertainNews, 3),
     ...pick(googleNews, 4),
   ].slice(0, 15)
-  console.log(`신규 뉴스 ${freshNews.length}개 (중복 ${news.length - freshNews.length}개 이상 제외)`)
+
+  // 뉴스 제목 유사도 기반 주제 중복 제거
+  const freshNews = deduplicateNewsByTopic(freshNewsRaw)
+  console.log(`신규 뉴스 ${freshNews.length}개 (중복 ${news.length - freshNews.length}개 이상 제외, 유사주제 ${freshNewsRaw.length - freshNews.length}개 추가 제외)`)
 
   if (freshNews.length === 0) {
     console.log('신규 뉴스 없음, 종료')
@@ -297,8 +340,12 @@ async function main() {
   }
 
   const now = new Date().toISOString()
-  const stamped = newPosts.map(p => ({ ...p, created_at: now }))
-  console.log(`포스팅 ${stamped.length}개 생성됨`)
+
+  // 기존 포스팅과 내용 유사도 기반 중복 제거
+  const deduped = deduplicatePostsByContent(newPosts, existing)
+  console.log(`포스팅 ${newPosts.length}개 생성 → 중복 제거 후 ${deduped.length}개 저장`)
+
+  const stamped = deduped.map(p => ({ ...p, created_at: now }))
 
   // 새 포스팅을 앞에 추가, 최대 500개 유지
   const all = [...stamped, ...existing].slice(0, 500)
