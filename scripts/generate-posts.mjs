@@ -60,11 +60,28 @@ async function generatePosts(news) {
 아래 뉴스를 보고 X(트위터) 포스팅을 작성하세요.
 
 --- 포스팅 방향 (중요) ---
-정치, 경제, 산업 위주로 작성할 것. 단순 뉴스 요약이 아니라:
+뉴스 소스에 따라 아래 방향으로 작성할 것. 단순 뉴스 요약 절대 금지.
+
+[정치/경제 뉴스 (Interfax, RIA, Kommersant, RG 등)]
 - 이 사건이 러시아 경제/정치 구조에서 갖는 의미를 분석
-- 수치/데이터가 있으면 반드시 포함 (유가, 환율, GDP, 생산량 등)
-- 한국/한국인 독자 시각에서 "이게 왜 중요한가"를 짚어줄 것
-- 모스크바 현지에서 직접 보고 느끼는 관점 포함
+- 수치/데이터 반드시 포함 (유가, 환율, GDP 등)
+- 한국/한국인 독자 시각에서 "이게 왜 중요한가" 짚기
+
+[스포츠 뉴스 (Sports.ru, RPL, KHL 등)]
+- 경기 결과나 선수 소식에 모스크바 현지 팬 반응 섞기
+- "러시아 스포츠 팬들이 어떻게 반응하는지" 현장 시각 추가
+- 한국 스포츠/선수와 비교하거나 한국인이 공감할 포인트 연결
+- 예: "KHL 결승 분위기가 국내 야구 플레이오프 뺨치는 수준임"
+
+[연예/문화/인터넷 여론 (StarHit, 한국 언론 등)]
+- 러시아 연예계 이슈에 한국인 반응 상상하며 작성
+- 러시아와 한국 연예/문화 트렌드 비교
+- 가벼운 감성으로, 진지하지 않게. 공감 유발하는 방향
+- 예: "불곰국 스타들도 SNS 팔로워 수 전쟁 중임 ㄷㄷ"
+
+[한국 언론 러시아 뉴스 (Google News)]
+- 한국인 시각에서 러시아를 바라보는 관점 활용
+- 현지에서 사는 사람으로서 "그게 실제론 이렇다"는 시각 추가
 ---
 
 --- 실제 트윗 예시 (이 말투와 톤을 정확히 따라할 것) ---
@@ -88,6 +105,12 @@ async function generatePosts(news) {
 
 예시7 (그럼 그렇지 스타일):
 "그럼 그렇지...\n불곰국 중앙은행이 기준금리 21% 유지한다고 발표.\n물가 잡겠다고 올린 거지만, 기업들 대출 이자 부담이 장난 아님.\n전쟁 중에 고금리 유지하는 게 맞나 싶음."
+
+예시8 (스포츠):
+"KHL 플레이오프 분위기 진짜 장난 아님\n-\n모스크바 아레나 근처만 가도 유니폼 입은 사람들로 가득.\n여기 아이스하키는 한국으로 치면 야구 플레이오프 수준의 국민 스포츠임.\n러시아 친구들이 경기 얘기할 때 눈이 달라지는 거 보면 진심인 거 알겠음."
+
+예시9 (연예/문화):
+"불곰국 연예계도 결혼·이혼 뉴스로 난리남\n-\n러시아 인스타에서 팔로워 수백만 스타들이 이혼 발표하면 댓글이 수만 개씩 달림.\n한국이랑 똑같음. 연예인 사생활 궁금해하는 건 세계 공통인 듯.\n근데 러시아는 이혼 후에도 같이 일하는 경우가 훨씬 많아서 신기함."
 ---
 
 페르소나 특징 (반드시 반영):
@@ -214,8 +237,27 @@ async function main() {
     existing.map(p => (typeof p === 'string' ? '' : p.link)).filter(Boolean)
   )
 
-  // 신규 뉴스만 필터링 (이미 처리된 링크 제외), 최대 15개
-  const freshNews = news.filter(n => n.link && !existingLinks.has(n.link)).slice(0, 9)
+  // 신규 뉴스만 필터링 (이미 처리된 링크 제외)
+  const allFresh = news.filter(n => n.link && !existingLinks.has(n.link))
+
+  // 소스 카테고리 분류
+  const sportsSources = new Set(['Sports.ru', 'RPL', 'KHL'])
+  const entertainmentSources = new Set(['StarHit', 'Светские хроники', 'Top Models Russia', 'Inside Fashion', 'Vrednaya Moda'])
+  const googleNewsSource = (n) => n.topic && !sportsSources.has(n.topic) && !entertainmentSources.has(n.topic) && !['Interfax','RIA','TASS','Kommersant','Lenta','RG','M24','MosNow','MoscowTop','MoscowMap','MoscowGuru','СМИ РФ','Meteovesti'].includes(n.topic)
+
+  const sportsNews = allFresh.filter(n => sportsSources.has(n.source || n.topic))
+  const entertainNews = allFresh.filter(n => entertainmentSources.has(n.source || n.topic))
+  const googleNews = allFresh.filter(n => googleNewsSource(n))
+  const politicsNews = allFresh.filter(n => !sportsSources.has(n.source || n.topic) && !entertainmentSources.has(n.source || n.topic) && !googleNewsSource(n))
+
+  // 비율: 정치/경제 3개, 스포츠 2개, 연예/문화 2개, 구글뉴스(한국시각) 2개
+  const pick = (arr, n) => arr.slice(0, n)
+  const freshNews = [
+    ...pick(politicsNews, 3),
+    ...pick(sportsNews, 2),
+    ...pick(entertainNews, 2),
+    ...pick(googleNews, 2),
+  ].slice(0, 9)
   console.log(`신규 뉴스 ${freshNews.length}개 (중복 ${news.length - freshNews.length}개 이상 제외)`)
 
   if (freshNews.length === 0) {
