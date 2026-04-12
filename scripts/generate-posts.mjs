@@ -6,7 +6,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
 
 async function fetchRecentNews() {
-  const res = await fetch('https://rnews-archive.vercel.app/api/reports?limit=50')
+  const res = await fetch('https://rnews-archive.vercel.app/api/reports?limit=100')
   if (!res.ok) throw new Error(`News API error: ${res.status}`)
   const data = await res.json()
   const items = data.items || []
@@ -250,14 +250,14 @@ async function main() {
   const googleNews = allFresh.filter(n => googleNewsSource(n))
   const politicsNews = allFresh.filter(n => !sportsSources.has(n.source || n.topic) && !entertainmentSources.has(n.source || n.topic) && !googleNewsSource(n))
 
-  // 비율: 정치/경제 3개, 스포츠 2개, 연예/문화 2개, 구글뉴스(한국시각) 2개
+  // 비율: 정치/경제 5개, 스포츠 3개, 연예/문화 3개, 구글뉴스(한국시각) 4개
   const pick = (arr, n) => arr.slice(0, n)
   const freshNews = [
-    ...pick(politicsNews, 3),
-    ...pick(sportsNews, 2),
-    ...pick(entertainNews, 2),
-    ...pick(googleNews, 2),
-  ].slice(0, 9)
+    ...pick(politicsNews, 5),
+    ...pick(sportsNews, 3),
+    ...pick(entertainNews, 3),
+    ...pick(googleNews, 4),
+  ].slice(0, 15)
   console.log(`신규 뉴스 ${freshNews.length}개 (중복 ${news.length - freshNews.length}개 이상 제외)`)
 
   if (freshNews.length === 0) {
